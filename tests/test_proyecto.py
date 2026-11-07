@@ -95,6 +95,11 @@ class PruebasGrafo(unittest.TestCase):
                 con_ciclos += 1
         self.assertGreater(con_ciclos, 285)  # casi siempre ilustrativo
 
+    def test_generacion_libre_sortea_n_en_rango(self):
+        rng = random.Random(3)
+        tamanos = {Grafo.generar_aleatorio_libre(rng).n for _ in range(300)}
+        self.assertEqual(tamanos, set(range(4, 13)))
+
     def test_generacion_reproducible_con_semilla(self):
         a = Grafo.generar_aleatorio(8, random.Random(7)).obtener_aristas()
         b = Grafo.generar_aleatorio(8, random.Random(7)).obtener_aristas()

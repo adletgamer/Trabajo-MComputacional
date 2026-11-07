@@ -43,12 +43,12 @@
     mostrarTrabajo(true);
   }
   function iniciarAleatorio() {
-    const n = leerN(); if (n === null) return;
-    detener(); modo = "aleatorio"; g = A.generarAleatorio(n); respaldo = null;
+    $("err").textContent = "";
+    detener(); modo = "aleatorio"; g = A.generarAleatorioLibre(); respaldo = null;
     $("manual").style.display = "none"; $("aleat").style.display = "block";
     modificado(""); analizar(); mostrarTrabajo(true);
   }
-  function regenerar() { detener(); respaldo = null; g = A.generarAleatorio(g.n); modificado(""); analizar(); }
+  function regenerar() { detener(); respaldo = null; g = A.generarAleatorioLibre(); modificado(""); analizar(); }
 
   function modificado(msg) {
     detener(); pasos = []; comps = []; idx = 0; sug = []; verSug = false;
@@ -237,7 +237,7 @@
   $("bFin").onclick = () => ir(pasos.length - 1); $("bPlay").onclick = reproducir;
   $("scrub").oninput = () => ir(+$("scrub").value);
   $("vel").onchange = () => { if (timer) { detener(); reproducir(); } };
-  $("n").addEventListener("keydown", e => { if (e.key === "Enter") iniciarAleatorio(); });
+  $("n").addEventListener("keydown", e => { if (e.key === "Enter") iniciarManual(); });
   window.addEventListener("keydown", e => {
     if (!$("v-simulador").classList.contains("on") || $("trabajo").style.display !== "block") return;
     const t = e.target.tagName; if (t === "INPUT" || t === "SELECT" || t === "TEXTAREA") return;

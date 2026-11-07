@@ -31,18 +31,18 @@
     <h1>Descubra las <em>componentes conexas</em> paso a paso</h1>
     <p>Construya un grafo dirigido (o déjelo al azar), vea su matriz de adyacencia y recorra el algoritmo vértice por vértice. Al final, un asistente calcula qué aristas faltan para que todo el grafo sea fuertemente conexo.</p>
     <ol class="pasos3">
-     <li><i>1</i><div><b>Elija n y el modo.</b> <span>De 4 a 12 nodos; manual o aleatorio.</span></div></li>
+     <li><i>1</i><div><b>Elija el modo.</b> <span>Manual (usted fija n de 4 a 12) o aleatorio (todo se sortea).</span></div></li>
      <li><i>2</i><div><b>Recorra el algoritmo.</b> <span>Dos DFS: sobre G y sobre su transpuesto Gᵀ.</span></div></li>
      <li><i>3</i><div><b>Interprete el resultado.</b> <span>Componentes, grafo condensado y aristas sugeridas.</span></div></li>
     </ol>
    </div>
    <div class="card inicio">
     <h2>Nuevo grafo</h2>
-    <label class="t" for="n">1. Cantidad de nodos (4 a 12)</label>
+    <label class="t" for="n">Modo manual: cantidad de nodos (4 a 12)</label>
     <div class="nrow"><input id="n" type="number" min="4" max="12" value="8" inputmode="numeric"><input id="nr" type="range" min="4" max="12" value="8" aria-label="Cantidad de nodos"></div>
-    <label class="t">2. Generación del grafo</label>
-    <button class="pri opt" id="bManual">Manual — definir las conexiones<small>Usted elige cada arista dirigida u → v</small></button>
-    <button class="sec opt" id="bAleat">Aleatorio — generar automáticamente<small>Cada vez se sortea un grafo distinto</small></button>
+    <label class="t">¿Cómo generar el grafo?</label>
+    <button class="pri opt" id="bManual">Manual — definir n y las conexiones<small>Usted elige cada arista dirigida u → v</small></button>
+    <button class="sec opt" id="bAleat">Aleatorio — generar automáticamente<small>Sortea la cantidad de nodos (4 a 12) y las aristas: no hay que ingresar nada</small></button>
     <div id="err" role="alert"></div>
    </div>
   </div>
@@ -73,7 +73,7 @@
       </div>
       <div id="aleat">
         <h2>Grafo aleatorio</h2>
-        <div class="mut">Las aristas dirigidas se sortean en cada generación.</div>
+        <div class="mut">La cantidad de nodos y las aristas se sortean en cada generación.</div>
         <button class="sec" id="bRegen" style="margin-top:8px">↻ Generar otro grafo</button>
       </div>
       <div class="mut" id="listaAristas"></div>

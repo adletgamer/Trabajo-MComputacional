@@ -48,6 +48,9 @@
     return grupos.length >= 2 && grupos.filter(x => x.length >= 2).reduce((s, x) => s + x.length, 0) >= 3;
   }
   /* Entre n y ~1.6n aristas sorteadas al azar; se descartan (hasta 50 veces) los sorteos poco ilustrativos. */
+  function generarAleatorioLibre(rnd = Math.random) {
+    return generarAleatorio(N_MIN + Math.floor(rnd() * (N_MAX - N_MIN + 1)), rnd);
+  }
   function generarAleatorio(n, rnd = Math.random) {
     const pares = [];
     for (let u = 1; u <= n; u++) for (let v = 1; v <= n; v++) if (u !== v) pares.push([u, v]);
@@ -214,6 +217,6 @@
   }
 
   const api = { N_MIN, N_MAX, FASE_G, FASE_GT, FASE_RES, crearGrafo, agregar, eliminar, limpiar, aristas, matriz,
-    sucesores, predecesores, generarAleatorio, scc, condensacion, cotaAumento, sugerirAristas, kosaraju, componentesDebiles, aristasEntre, verificar, fmt };
+    sucesores, predecesores, generarAleatorio, generarAleatorioLibre, scc, condensacion, cotaAumento, sugerirAristas, kosaraju, componentesDebiles, aristasEntre, verificar, fmt };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Alg = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -96,6 +96,12 @@ class Grafo:
                 break
         return grafo
 
+    @classmethod
+    def generar_aleatorio_libre(cls, rng: random.Random | None = None) -> "Grafo":
+        """Grafo aleatorio cuya cantidad de nodos también se sortea en [N_MIN, N_MAX]."""
+        rng = rng or random.Random()
+        return cls.generar_aleatorio(rng.randint(N_MIN, N_MAX), rng)
+
     def _es_interesante(self) -> bool:
         """Al menos 2 componentes fuertes y >= 3 vértices en componentes de tamaño >= 2."""
         alcanza = {}

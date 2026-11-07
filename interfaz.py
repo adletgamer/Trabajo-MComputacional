@@ -84,7 +84,7 @@ class Aplicacion(tk.Tk):
                  font=("Segoe UI", 25, "bold")).pack()
         tk.Label(tarjeta, text="de un grafo dirigido · algoritmo de Kosaraju", bg="white", fg=self.GRIS,
                  font=("Segoe UI", 11)).pack(pady=(2, 24))
-        tk.Label(tarjeta, text=f"1. ¿Cuántos nodos tendrá el grafo? ({N_MIN} a {N_MAX})", bg="white",
+        tk.Label(tarjeta, text=f"Modo manual: ¿cuántos nodos tendrá el grafo? ({N_MIN} a {N_MAX})", bg="white",
                  fg=self.TEXTO, font=("Segoe UI", 12, "bold")).pack(anchor="w")
         fila = tk.Frame(tarjeta, bg="white")
         fila.pack(anchor="w", pady=(6, 20))
@@ -92,14 +92,14 @@ class Aplicacion(tk.Tk):
                                   font=("Segoe UI", 13), justify="center")
         self.n_spin.pack(side="left")
         tk.Label(fila, text="nodos", bg="white", fg=self.GRIS, font=("Segoe UI", 11)).pack(side="left", padx=8)
-        tk.Label(tarjeta, text="2. ¿Cómo quiere generar el grafo?", bg="white", fg=self.TEXTO,
+        tk.Label(tarjeta, text="¿Cómo quiere generar el grafo?", bg="white", fg=self.TEXTO,
                  font=("Segoe UI", 12, "bold")).pack(anchor="w")
         self._boton(tarjeta, "Manual: definir las conexiones", self._iniciar_manual, width=34).pack(pady=(8, 2))
         tk.Label(tarjeta, text="Usted elige cada arista dirigida u → v", bg="white", fg="#64748b",
                  font=("Segoe UI", 10)).pack(pady=(0, 12))
         self._boton(tarjeta, "Aleatorio: generar automáticamente", self._iniciar_aleatorio, principal=False,
                     width=34).pack(pady=2)
-        tk.Label(tarjeta, text="Cada vez se crea un grafo distinto", bg="white", fg="#64748b",
+        tk.Label(tarjeta, text=f"Sortea la cantidad de nodos ({N_MIN} a {N_MAX}) y las aristas: no hace falta ingresar nada", bg="white", fg="#64748b",
                  font=("Segoe UI", 10)).pack()
 
     def _crear_area_trabajo(self) -> None:
@@ -173,7 +173,7 @@ class Aplicacion(tk.Tk):
         self.aleatorio = tk.Frame(lateral, bg="white", padx=14, pady=10)
         tk.Label(self.aleatorio, text="Grafo aleatorio", bg="white", fg=self.TEXTO,
                  font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(0, 4))
-        tk.Label(self.aleatorio, text="Las aristas dirigidas se sortean en cada generación.", bg="white",
+        tk.Label(self.aleatorio, text="La cantidad de nodos y las aristas se sortean en cada generación.", bg="white",
                  fg=self.GRIS, justify="left", wraplength=375).pack(anchor="w")
         fila_aleatorio = tk.Frame(self.aleatorio, bg="white")
         fila_aleatorio.pack(fill="x", pady=(8, 0))
@@ -281,20 +281,20 @@ class Aplicacion(tk.Tk):
         self._mostrar_area()
 
     def _iniciar_aleatorio(self) -> None:
-        n = self._leer_n()
-        if n is None:
-            return
+        self._detener_auto()
         self.modo = "aleatorio"
         self.manual.pack_forget()
         self.aleatorio.pack(fill="x", before=self.sep)
-        self.grafo = Grafo.generar_aleatorio(n)
+        self.grafo = Grafo.generar_aleatorio_libre()
+        self.n_var.set(str(self.grafo.n))
         self._grafo_modificado()
         self._analizar()
         self._mostrar_area()
 
     def _regenerar(self) -> None:
         self._detener_auto()
-        self.grafo = Grafo.generar_aleatorio(self.grafo.n)
+        self.grafo = Grafo.generar_aleatorio_libre()
+        self.n_var.set(str(self.grafo.n))
         self._grafo_modificado()
         self._analizar()
 
