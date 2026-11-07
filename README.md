@@ -1,71 +1,60 @@
-# Componentes conexas de un grafo
+# Componentes conexas de un grafo dirigido
 
-Programa en Python para crear un grafo y ver, paso a paso, cómo el algoritmo BFS encuentra sus componentes conexas.
+Aplicación de escritorio en Python (Tkinter) que construye un **grafo dirigido** de *n* nodos (4 ≤ *n* ≤ 12), de forma **manual** o **aleatoria**, muestra su matriz de adyacencia y ejecuta **paso a paso** el algoritmo de **Kosaraju** para hallar sus componentes conexas (fuertemente conexas).
 
-## Antes de empezar
+## Versión web
 
-Necesitas **Python 3.10 o posterior**, **Tkinter** y **VS Code**. Tkinter viene con la instalación habitual de Python para Windows. Este proyecto **no necesita paquetes de `pip`**.
+La carpeta `web/` contiene la misma aplicación en HTML + JavaScript (sin dependencias), publicada con Vercel desde este repositorio (`vercel.json` apunta a `web/`). Se puede abrir también localmente: `web/index.html`.
 
-Si vas a instalar Python, asegúrate de incluir **Tcl/Tk and IDLE** y la opción para agregar Python al `PATH`. En VS Code, instala la extensión **Python**.
+## Requisitos
 
-## Abrir y ejecutar el programa en VS Code
+**Python 3.10 o posterior** con **Tkinter** (incluido en la instalación habitual de Python para Windows; al instalar marque *Tcl/Tk and IDLE*). No necesita paquetes de `pip`.
 
-1. Abre en VS Code la carpeta que contiene `main.py`.
-2. Abre una terminal desde **Terminal > New Terminal**. Los siguientes comandos son para **PowerShell en Windows**.
-3. Comprueba que Python está disponible:
+## Ejecutar
 
-   ```powershell
-   python --version
-   ```
+```powershell
+python main.py
+```
 
-   Si Windows no reconoce `python`, prueba `py --version` y usa `py` en el siguiente comando.
+(o `py main.py`; en VS Code también con **F5**, configuración *Componentes conexas*).
 
-4. Crea un entorno virtual dentro de la carpeta del proyecto:
+## Generar el ejecutable (.exe) en Windows
 
-   ```powershell
-   python -m venv .venv
-   ```
-
-5. Comprueba que Tkinter funciona:
-
-   ```powershell
-   .\.venv\Scripts\python.exe -m tkinter
-   ```
-
-   Debe aparecer una pequeña ventana de prueba. Ciérrala para continuar. Si aparece un error relacionado con `tkinter` o `init.tcl`, reinstala Python incluyendo **Tcl/Tk and IDLE** y vuelve a crear `.venv`.
-
-6. Ejecuta la aplicación:
-
-   ```powershell
-   .\.venv\Scripts\python.exe main.py
-   ```
-
-No necesitas activar `.venv` ni instalar nada con `pip`. Para volver a abrir el programa otro día, solo abre esta carpeta y repite el comando del paso 6.
-
-También puedes usar **F5** en VS Code: selecciona `.venv\Scripts\python.exe` con **Python: Select Interpreter** y elige la configuración **Componentes conexas**.
+Haga doble clic en `construir_exe.bat`. Crea `dist\ComponentesConexas.exe`, que funciona sin tener Python instalado.
 
 ## Cómo usarlo
 
-Al abrir, elige **Crear mi grafo** o **Ver demo de 10 nodos**.
+1. Escriba la cantidad de nodos (4 a 12).
+2. Elija **Manual** (usted agrega aristas dirigidas *u → v*) o **Aleatorio** (el programa sortea un grafo distinto cada vez; «Generar otro grafo» crea uno nuevo).
+3. Se muestran el grafo con flechas y la matriz de adyacencia (fila → columna). En modo manual pulse **Analizar grafo**.
+4. Avance con **Siguiente →** / **← Anterior**, o use **▶ Reproducir**. **Ver resultado** salta al final.
+5. Al terminar se muestra la solución: número de componentes, los nodos de cada una, aristas entre componentes y una verificación independiente. El grafo final se pinta con un color por componente.
 
-- **Crear mi grafo:** indica entre 4 y 12 nodos, pulsa **Crear**, añade conexiones entre dos nodos y pulsa **Analizar**. **Quitar** permite corregir una conexión.
-- **Ver demo de 10 nodos:** con un clic carga un grafo con tres componentes: una componente de seis nodos con ciclos, un triángulo y un nodo aislado. La demostración avanza automáticamente; **Anterior** o **Siguiente** detienen la reproducción y permiten explorar los pasos a mano.
+### Qué se ve en cada fase
 
-Al terminar, aparece un certificado que comprueba que todos los vértices quedaron agrupados, que cada grupo tiene un árbol BFS y que no hay aristas que unan grupos diferentes. Las aristas sólidas forman el bosque BFS; las discontinuas pertenecen al grafo, pero no hicieron falta para descubrir nuevos vértices.
+| Fase | Qué ocurre | Qué se dibuja |
+| --- | --- | --- |
+| 1 | DFS sobre G; cada vértice recibe su orden de finalización `f=k` | G, pila de recursión, aristas de árbol |
+| 2 | DFS sobre Gᵀ (aristas invertidas) en orden inverso de finalización; cada árbol es una componente | Gᵀ, componentes ya completas |
+| Resultado | Solución final | G con un color por componente |
 
-## Qué hace cada archivo
+> En un grafo dirigido, u y v están en la misma componente conexa si hay camino de u a v **y** de v a u. La solución también informa cuántas componentes *débilmente* conexas hay (ignorando el sentido de las aristas).
+
+## Archivos
 
 | Archivo | Función |
 | --- | --- |
 | `main.py` | Abre la aplicación. |
-| `interfaz.py` | Muestra las pantallas, el grafo, la matriz y los pasos. |
-| `grafo.py` | Guarda los nodos y conexiones; calcula la matriz de adyacencia. |
-| `algoritmo.py` | Ejecuta BFS y registra cada paso. |
-| `tests/test_proyecto.py` | Comprueba el grafo y el resultado del algoritmo. |
-| `INVESTIGACION_BFS.md` | Resume la teoría, los proyectos revisados y el aporte diferencial. |
+| `interfaz.py` | Pantallas, dibujo del grafo con flechas, matriz y navegación paso a paso. |
+| `grafo.py` | Grafo dirigido, matriz de adyacencia y generación aleatoria. |
+| `algoritmo.py` | Kosaraju paso a paso, componentes débiles y verificación independiente. |
+| `tests/test_proyecto.py` | 14 pruebas (incluye comparación con fuerza bruta en 400 grafos aleatorios). |
+| `construir_exe.bat` | Genera el ejecutable con PyInstaller. |
+| `web/` | Versión web (Vercel): `algoritmo.js` (grafo y Kosaraju), `app.js` (interfaz), `index.html`. |
+| `docs/` | Informe, diagrama de flujo y presentación. |
 
-Para ejecutar las pruebas, si lo deseas:
+Pruebas:
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+python -m unittest discover -s tests -v
 ```
