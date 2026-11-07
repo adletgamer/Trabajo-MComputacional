@@ -153,7 +153,67 @@
     return true;
   }
 
+  /* ---------- Diferencial: condensación y asistente de conectividad ---------- */
+  // Componentes fuertes por alcanzabilidad mutua (rápido, sin registrar pasos).
+  function scc(g) {
+    const r = alcanzables(g), vistos = new Set(), res = [];
+    for (let i = 0; i < g.n; i++) {
+      if (vistos.has(i)) continue;
+      const gr = [];
+      for (let j = 0; j < g.n; j++) if (r[i][j] && r[j][i]) { gr.push(j + 1); vistos.add(j); }
+      res.push(gr);
+    }
+    return res;
+  }
+  /* Grafo condensado (DAG de componentes): aristas, fuentes, sumideros, capas topológicas y orden topológico. */
+  function condensacion(g, comps) {
+    const idx = {}; comps.forEach((c, i) => c.forEach(v => (idx[v] = i)));
+    const k = comps.length, sal = Array.from({ length: k }, () => new Set()), ent = Array.from({ length: k }, () => new Set());
+    for (const [u, v] of aristas(g)) if (idx[u] !== idx[v]) { sal[idx[u]].add(idx[v]); ent[idx[v]].add(idx[u]); }
+    const fuentes = [], sumideros = [];
+    for (let i = 0; i < k; i++) { if (!ent[i].size) fuentes.push(i); if (!sal[i].size) sumideros.push(i); }
+    // capas: longitud del camino más largo desde una fuente (Kahn)
+    const grado = ent.map(s => s.size), capa = new Array(k).fill(0), orden = [], cola = [];
+    grado.forEach((d, i) => { if (!d) cola.push(i); });
+    while (cola.length) {
+      const x = cola.shift(); orden.push(x);
+      for (const y of sal[x]) { capa[y] = Math.max(capa[y], capa[x] + 1); if (--grado[y] === 0) cola.push(y); }
+    }
+    return { k, aristas: [...Array(k).keys()].flatMap(i => [...sal[i]].map(j => [i, j])), fuentes, sumideros, capa, orden, sal, ent };
+  }
+  /* Mínimo de aristas para que G sea fuertemente conexo (Eswaran y Tarjan, 1976):
+     0 si ya lo es; en otro caso max(#fuentes, #sumideros), contando los vértices aislados en ambos. */
+  function cotaAumento(g, comps) {
+    if (comps.length <= 1) return 0;
+    const c = condensacion(g, comps); return Math.max(c.fuentes.length, c.sumideros.length);
+  }
+  /* Construye un conjunto de aristas (de un sumidero a una fuente) que lo vuelve fuertemente conexo.
+     Cada paso elige la arista que más reduce max(#fuentes, #sumideros) y se verifica recalculando. */
+  function sugerirAristas(g) {
+    const h = crearGrafo(g.n); for (const [u, v] of aristas(g)) agregar(h, u, v);
+    const res = [];
+    for (let guard = 0; guard < 40; guard++) {
+      const comps = scc(h); if (comps.length <= 1) break;
+      const c = condensacion(h, comps);
+      let mejor = null;
+      for (const t of c.sumideros) for (const s of c.fuentes) {
+        if (t === s) continue;
+        const u = Math.min(...comps[t]), v = Math.min(...comps[s]);
+        if (h.adj[u].has(v)) continue;
+        agregar(h, u, v);
+        const c2 = condensacion(h, scc(h)), puntaje = Math.max(c2.fuentes.length, c2.sumideros.length) * 100 + c2.k;
+        h.adj[u].delete(v);
+        if (!mejor || puntaje < mejor.puntaje) mejor = { u, v, puntaje };
+      }
+      if (!mejor) { // caso residual: unir una componente cualquiera con otra
+        outer: for (const a of comps) for (const b of comps) if (a !== b && !h.adj[a[0]].has(b[0])) { mejor = { u: a[0], v: b[0] }; break outer; }
+      }
+      agregar(h, mejor.u, mejor.v); res.push([mejor.u, mejor.v]);
+    }
+    return res;
+  }
+
   const api = { N_MIN, N_MAX, FASE_G, FASE_GT, FASE_RES, crearGrafo, agregar, eliminar, limpiar, aristas, matriz,
-    sucesores, predecesores, generarAleatorio, kosaraju, componentesDebiles, aristasEntre, verificar, fmt };
+    sucesores, predecesores, generarAleatorio, scc, condensacion, cotaAumento, sugerirAristas, kosaraju, componentesDebiles, aristasEntre, verificar, fmt };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Alg = api;
 })(typeof window !== "undefined" ? window : globalThis);

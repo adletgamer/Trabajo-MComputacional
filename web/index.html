@@ -3,117 +3,167 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Componentes conexas de un grafo dirigido</title>
-<style>
-:root{--bg:#f4f7fb;--card:#fff;--tx:#243247;--mut:#53657a;--az:#2764a5;--bd:#dce5ef;--soft:#e6eef8}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font-family:"Segoe UI",system-ui,sans-serif}
-h1{font-size:1.5rem;margin:0}h2{font-size:1rem;margin:0 0 .5rem}
-button{font:inherit;cursor:pointer;border:0;border-radius:6px;padding:.5rem .9rem;background:var(--soft);color:var(--az)}
-button:hover:not(:disabled){background:#d4e4f5}button:disabled{opacity:.45;cursor:default}
-button.pri{background:var(--az);color:#fff;font-weight:600}button.pri:hover:not(:disabled){background:#174b80}
-select,input{font:inherit;padding:.35rem .5rem;border:1px solid #b9c7d8;border-radius:6px;background:#fff;color:var(--tx)}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:8px}
-#portada{min-height:100vh;display:grid;place-items:center;padding:16px}
-#portada .card{padding:36px 40px;max-width:460px;width:100%}
-#portada p{color:var(--mut);margin:.2rem 0 1.2rem}
-#portada .opt{display:block;width:100%;padding:.8rem;margin-top:.6rem;font-size:1.05rem}
-#portada small{display:block;color:#64748b;margin:.25rem 0 .4rem}
-#err{color:#b42318;min-height:1.3em;margin:.5rem 0 0;font-size:.9rem}
-#trabajo{display:none;max-width:1280px;margin:0 auto;padding:12px 16px 16px}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
-header p{margin:.2rem 0 0;color:var(--mut);font-size:.9rem}
-.cuerpo{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px}
-@media(max-width:900px){.cuerpo{grid-template-columns:1fr}}
-.grafo{padding:8px 12px}
-.grafo .cab{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.grafo .cab b{font-size:1.05rem}.grafo .cab span{color:var(--mut);font-size:.85rem}
-svg{width:100%;height:auto;display:block;max-height:62vh}
-.leyenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.78rem;color:var(--mut);margin-top:4px}
-.leyenda i{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #66788a;margin-right:4px;vertical-align:-2px}
-.lado{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
-.fila{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.mut{color:var(--mut);font-size:.85rem}
-hr{border:0;border-top:1px solid #e6ebf1;margin:2px 0;width:100%}
-.mat{overflow:auto;max-height:230px;font-family:Consolas,monospace;font-size:.82rem}
-.mat table{border-collapse:collapse}.mat td,.mat th{padding:1px 6px;text-align:center}
-.mat th{color:var(--mut);font-weight:600}.mat td.u{background:#dfeaf7;font-weight:700;color:var(--az)}
-#sol{font-size:.9rem;line-height:1.45;max-height:210px;overflow:auto}
-#sol .c{margin-left:1rem}
-.pie{margin-top:12px;padding:10px 16px}
-.pie .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.pie .fase{color:var(--az);font-weight:700}
-#desc{font-size:1.05rem;margin:.5rem 0 .3rem;min-height:2.6em}
-.datos{display:flex;flex-wrap:wrap;gap:4px 20px;color:var(--mut);font-size:.85rem}
-</style>
+<title>Componentes conexas de un grafo dirigido · UPC</title>
+<meta name="description" content="Simulador interactivo del algoritmo de Kosaraju para grafos dirigidos, con asistente de conectividad. Matemática Computacional, UPC.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="portada">
-  <div class="card">
-    <h1 style="font-size:1.9rem">Componentes conexas</h1>
-    <p>de un grafo dirigido · algoritmo de Kosaraju</p>
-    <b>1. ¿Cuántos nodos tendrá el grafo? (4 a 12)</b>
-    <div class="fila" style="margin:.5rem 0 1.2rem"><input id="n" type="number" min="4" max="12" value="8" style="width:5rem;font-size:1.15rem;text-align:center"> <span class="mut">nodos</span></div>
-    <b>2. ¿Cómo quiere generar el grafo?</b>
-    <button class="pri opt" id="bManual">Manual: definir las conexiones</button>
-    <small>Usted elige cada arista dirigida u → v</small>
-    <button class="opt" id="bAleat">Aleatorio: generar automáticamente</button>
-    <small>Cada vez se crea un grafo distinto</small>
-    <div id="err" role="alert"></div>
-  </div>
-</div>
+<header class="top"><div class="in">
+  <a class="marca" href="#simulador" data-vista="simulador" aria-label="Inicio">
+    <img src="img/upc-logo.png" alt="Logo UPC">
+    <div><b>Componentes conexas</b><span>Matemática Computacional · UPC</span></div>
+  </a>
+  <nav aria-label="Secciones">
+    <button data-vista="simulador">Simulador</button>
+    <button data-vista="guia">Cómo funciona</button>
+    <button data-vista="autores">Autores y bibliografía</button>
+  </nav>
+</div></header>
 
-<div id="trabajo">
-  <header>
-    <div><h1>Componentes conexas de un grafo dirigido</h1><p>Avance paso a paso por el algoritmo de Kosaraju (dos recorridos DFS).</p></div>
-    <button id="bInicio">← Inicio</button>
-  </header>
+<main>
+<!-- ================= SIMULADOR ================= -->
+<section id="v-simulador" class="vista">
+ <div id="portada">
+  <div class="hero">
+   <div>
+    <span class="ey">Grafos dirigidos · Kosaraju</span>
+    <h1>Descubra las <em>componentes conexas</em> paso a paso</h1>
+    <p>Construya un grafo dirigido (o déjelo al azar), vea su matriz de adyacencia y recorra el algoritmo vértice por vértice. Al final, un asistente calcula qué aristas faltan para que todo el grafo sea fuertemente conexo.</p>
+    <ol class="pasos3">
+     <li><i>1</i><div><b>Elija n y el modo.</b> <span>De 4 a 12 nodos; manual o aleatorio.</span></div></li>
+     <li><i>2</i><div><b>Recorra el algoritmo.</b> <span>Dos DFS: sobre G y sobre su transpuesto Gᵀ.</span></div></li>
+     <li><i>3</i><div><b>Interprete el resultado.</b> <span>Componentes, grafo condensado y aristas sugeridas.</span></div></li>
+    </ol>
+   </div>
+   <div class="card inicio">
+    <h2>Nuevo grafo</h2>
+    <label class="t" for="n">1. Cantidad de nodos (4 a 12)</label>
+    <div class="nrow"><input id="n" type="number" min="4" max="12" value="8" inputmode="numeric"><input id="nr" type="range" min="4" max="12" value="8" aria-label="Cantidad de nodos"></div>
+    <label class="t">2. Generación del grafo</label>
+    <button class="pri opt" id="bManual">Manual — definir las conexiones<small>Usted elige cada arista dirigida u → v</small></button>
+    <button class="sec opt" id="bAleat">Aleatorio — generar automáticamente<small>Cada vez se sortea un grafo distinto</small></button>
+    <div id="err" role="alert"></div>
+   </div>
+  </div>
+ </div>
+
+ <div id="trabajo">
+  <div class="cab">
+    <div><h1>Simulador de componentes conexas</h1><p class="mut">Kosaraju paso a paso · use <kbd>←</kbd> <kbd>→</kbd> para navegar y <kbd>Espacio</kbd> para reproducir.</p></div>
+    <button class="sec" id="bInicio">← Nuevo grafo</button>
+  </div>
   <div class="cuerpo">
     <div class="card grafo">
-      <div class="cab"><b id="tituloG">Grafo G</b><span id="infoG"></span></div>
+      <div class="ch"><b id="tituloG">Grafo G</b><span class="mut" id="infoG"></span></div>
       <svg id="svg" viewBox="0 0 720 560" role="img" aria-label="Grafo dirigido"></svg>
       <div class="leyenda">
         <span><i style="background:#e8eef5"></i>Sin visitar</span><span><i style="background:#f4d778"></i>En la pila DFS</span>
         <span><i style="background:#f18a70"></i>Vértice actual</span><span><i style="background:#9fb8d6"></i>Terminado (fase 1)</span>
         <span><i style="background:#68bcc2"></i>Componente (un color c/u)</span>
-        <span>Aristas: ━ árbol DFS · ┄ ya visitada · coral = se examina · f=k: orden de finalización</span>
+        <span>━ árbol DFS · ┄ ya visitada · coral = se examina · f=k: orden de finalización</span>
       </div>
     </div>
     <div class="card lado">
       <div id="manual">
         <h2>Construir el grafo</h2>
-        <div class="fila">Arista <select id="u"></select> <b>→</b> <select id="v"></select>
-          <button id="bAdd">Agregar</button><button id="bDel">Quitar</button><button id="bClr">Limpiar</button></div>
-        <button class="pri" id="bAna" style="width:100%;margin-top:8px">Analizar grafo ▶</button>
+        <div class="fila" style="margin-top:.5rem">Arista <select id="u" aria-label="Origen"></select> <b>→</b> <select id="v" aria-label="Destino"></select>
+          <button class="sec" id="bAdd">Agregar</button><button class="sec" id="bDel">Quitar</button><button class="sec" id="bClr">Limpiar</button></div>
+        <button class="pri" id="bAna" style="width:100%;margin-top:10px">Analizar grafo ▶</button>
       </div>
       <div id="aleat">
         <h2>Grafo aleatorio</h2>
         <div class="mut">Las aristas dirigidas se sortean en cada generación.</div>
-        <button id="bRegen" style="margin-top:6px">↻ Generar otro grafo</button>
+        <button class="sec" id="bRegen" style="margin-top:8px">↻ Generar otro grafo</button>
       </div>
       <div class="mut" id="listaAristas"></div>
       <hr>
-      <h2>Matriz de adyacencia (fila → columna)</h2>
+      <h2>Matriz de adyacencia <span class="mut" style="font-weight:400">(fila → columna)</span></h2>
       <div class="mat" id="mat"></div>
       <hr>
       <h2>Solución</h2>
       <div id="sol"></div>
     </div>
   </div>
+
   <div class="card pie">
-    <div class="top">
+    <div class="top2">
       <span class="fase" id="fase"></span>
       <div class="fila">
-        <button id="bIni" title="Primer paso">⏮</button><button id="bPrev">← Anterior</button><button id="bNext">Siguiente →</button>
-        <button id="bPlay">▶ Reproducir</button><button id="bFin">Ver resultado ⏭</button><span class="mut" id="cont"></span>
+        <button class="sec" id="bIni" title="Primer paso" aria-label="Primer paso">⏮</button><button class="sec" id="bPrev">← Anterior</button><button class="sec" id="bNext">Siguiente →</button>
+        <button class="pri" id="bPlay">▶ Reproducir</button>
+        <select id="vel" aria-label="Velocidad"><option value="1000">0,5×</option><option value="650" selected>1×</option><option value="320">2×</option><option value="150">4×</option></select>
+        <button class="sec" id="bFin">Ver resultado ⏭</button><span class="mut" id="cont"></span>
       </div>
     </div>
-    <div id="desc"></div>
+    <div class="prog" aria-hidden="true"><i id="barra"></i></div>
+    <input class="scrub" id="scrub" type="range" min="0" max="0" value="0" aria-label="Paso del algoritmo">
+    <div id="desc" aria-live="polite"></div>
     <div class="datos"><span id="pila"></span><span id="vis"></span><span id="ord"></span></div>
-    <div class="datos" style="margin-top:2px"><span id="comps"></span></div>
+    <div class="datos" style="margin-top:3px"><span id="comps"></span></div>
   </div>
-</div>
+
+  <div class="card avz" id="avz">
+    <div class="tit"><span class="tag">Aporte del grupo</span><h2>Más allá de Kosaraju: grafo condensado y asistente de conectividad</h2></div>
+    <div class="mut">Disponible al terminar el algoritmo. Al contraer cada componente a un punto se obtiene un grafo sin ciclos (DAG); con él se calcula cuántas aristas faltan para que el grafo sea fuertemente conexo.</div>
+    <div class="dos" id="avzBody"></div>
+  </div>
+ </div>
+</section>
+
+<!-- ================= GUÍA ================= -->
+<section id="v-guia" class="vista">
+ <div class="seccion">
+  <h1>Cómo <em>funciona</em></h1>
+  <p>Resumen del problema, del algoritmo y de lo que añade este proyecto.</p>
+  <div class="grid2">
+   <div class="card"><h2>¿Qué es una componente conexa en un grafo dirigido?</h2>
+    <p>Dos vértices <b>u</b> y <b>v</b> están en la misma componente si hay un camino de u a v <b>y</b> otro de v a u (conexidad fuerte). Las componentes particionan los vértices: cada vértice pertenece a una sola, y puede ser la única de su componente.</p></div>
+   <div class="card"><h2>Algoritmo de Kosaraju</h2>
+    <ul><li><b>Fase 1.</b> DFS sobre G; cada vértice recibe su orden de finalización <span class="code">f</span>.</li>
+     <li><b>Transpuesto.</b> Se invierten todas las aristas (Gᵀ).</li>
+     <li><b>Fase 2.</b> DFS sobre Gᵀ en orden inverso de <span class="code">f</span>; cada árbol DFS es una componente.</li></ul>
+    <p>Complejidad O(n + m).</p></div>
+   <div class="card"><h2>Grafo condensado</h2>
+    <p>Si cada componente se contrae a un solo nodo, el resultado es un grafo dirigido sin ciclos. Sus <b>fuentes</b> (sin aristas de entrada) y <b>sumideros</b> (sin aristas de salida) describen la estructura global y permiten ordenar las componentes topológicamente.</p></div>
+   <div class="card"><h2>Asistente de conectividad</h2>
+    <p>¿Cuántas aristas hay que agregar para que todo el grafo sea una sola componente? Eswaran y Tarjan (1976) demostraron que son exactamente <span class="code">máx(#fuentes, #sumideros)</span> (un vértice aislado cuenta como ambos). El programa propone ese número mínimo de aristas, las dibuja y permite aplicarlas para comprobar que el resultado es una única componente.</p></div>
+   <div class="card"><h2>¿Cómo sabemos que es correcto?</h2>
+    <ul><li>Una verificación independiente (cierre transitivo) contrasta cada resultado.</li>
+     <li>La fórmula del asistente se comprobó contra fuerza bruta en los 4096 grafos dirigidos posibles de 4 nodos.</li>
+     <li>20 000 grafos aleatorios adicionales: las aristas sugeridas siempre logran conexidad fuerte con el mínimo.</li></ul></div>
+   <div class="card"><h2>Atajos</h2><ul><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
+  </div>
+ </div>
+</section>
+
+<!-- ================= AUTORES ================= -->
+<section id="v-autores" class="vista">
+ <div class="seccion">
+  <h1>Autores y <em>bibliografía</em></h1>
+  <p>Las ideas detrás del programa, de los puentes de Königsberg a los algoritmos de conectividad modernos. Deslice el carrusel o use las flechas del teclado.</p>
+  <div class="linea" id="linea"><ol></ol></div>
+ </div>
+ <div class="carr" id="carr" tabindex="0" aria-roledescription="carrusel" aria-label="Autores">
+   <button class="flecha p" id="cPrev" aria-label="Anterior">‹</button>
+   <div class="pista" id="pista"></div>
+   <button class="flecha n" id="cNext" aria-label="Siguiente">›</button>
+ </div>
+ <div class="puntos" id="puntos"></div>
+ <div class="seccion" style="padding-top:8px"><h2 style="font-size:1.2rem">Referencias (APA 7)</h2></div>
+ <div class="biblio"><ol id="biblio"></ol></div>
+ <div class="nota">Las fotografías se cargan desde <span class="code">web/img/autores/&lt;id&gt;.jpg</span>; si el archivo no existe se muestra un monograma.</div>
+</section>
+</main>
+
+<footer><div class="in">
+  <img src="img/upc-logo.png" alt="">
+  <div><p><b>Universidad Peruana de Ciencias Aplicadas</b></p><p class="mut">Matemática Computacional (1AMA0726) · Proyecto TB · Ciclo 2026-20</p></div>
+  <p class="mut" id="grupoInfo" style="margin-left:auto;text-align:right"></p>
+</div></footer>
+
 <script src="algoritmo.js"></script>
+<script src="autores.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
