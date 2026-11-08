@@ -66,17 +66,35 @@ main{min-height:calc(100vh - 140px)}
 .grafo .ch{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
 .grafo .ch b{font-size:1.05rem}
 svg{width:100%;height:auto;display:block}
-#svg{max-height:64vh}
+#svg{max-height:64vh;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#svg.editable .nodo{cursor:pointer}
+#svg.editable .nodo:hover .cuerpo{stroke:var(--red);stroke-width:3}
+#svg .hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer}
+#svg .hit:hover{stroke:rgba(227,34,34,.22)}
+#linGuia{stroke:var(--red);stroke-width:2.5;stroke-dasharray:6 5;pointer-events:none}
+#linGuia.snap{stroke-dasharray:none}
+.ayuda{display:none;margin:6px 0 2px;padding:.45rem .7rem;border-radius:9px;background:#f3f7fc;border:1px solid #dce6f2;font-size:.88rem;color:var(--mut)}
+.ayuda.on{display:flex;align-items:center;min-height:4.3em} /* altura fija: el grafo no se mueve entre clics */
+.ayuda b{color:var(--ink)}
+.ayuda .msg{color:var(--ok);font-weight:700;margin-right:.45rem}
+.ayuda .msg.mal{color:#b42318}
+.ayuda.sel{background:#fdeaea;border-color:#f5c2c2;color:var(--red-d)}
 .leyenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.78rem;color:var(--mut);margin-top:6px}
 .leyenda i{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #66788a;margin-right:5px;vertical-align:-2px}
 .lado{padding:14px 16px;display:flex;flex-direction:column;gap:10px;align-self:start}
 .fila{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 hr{border:0;border-top:1px solid var(--line);margin:0;width:100%}
-.mat{overflow:auto;max-height:240px;font-family:ui-monospace,Consolas,monospace;font-size:.82rem}
+.mat{overflow:auto;max-height:370px;font-family:ui-monospace,Consolas,monospace;font-size:.82rem}
 .mat table{border-collapse:separate;border-spacing:2px}
 .mat td,.mat th{min-width:1.7em;padding:1px 4px;text-align:center;border-radius:4px}
 .mat th{color:var(--mut);font-weight:600}.mat td.u{background:#e4ecf7;font-weight:700;color:var(--blue)}
 .mat td.uno{background:#fdeaea;color:var(--red-d);font-weight:700}
+.mat table.editable td{padding:3px 5px}
+.mat td.cel{cursor:pointer;background:#f6f8fb;transition:background .12s,box-shadow .12s}
+.mat td.cel.uno{background:#fdeaea}
+.mat td.cel:hover{box-shadow:inset 0 0 0 2px var(--red);background:#fff}
+.mat td.diag{color:#b6c1ce}
+.mat .cruz{background:var(--red)!important;color:#fff!important}
 #sol{font-size:.9rem;line-height:1.5;max-height:300px;overflow:auto}
 #sol .c{margin-left:1rem}
 .chip{display:inline-block;padding:.05rem .5rem;border-radius:999px;font-size:.78rem;font-weight:700;color:#fff;margin:0 2px}

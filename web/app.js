@@ -6,6 +6,7 @@
   const TITULO = { 1: "Grafo G", 2: "Grafo transpuesto Gᵀ (aristas invertidas)", 3: "Grafo G con sus componentes" };
   const W = 720, H = 560, R = 24;
   let g = null, modo = "", pasos = [], comps = [], idx = 0, timer = null, sug = [], verSug = false, respaldo = null;
+  let origen = null, raton = null; // edición con clics: nodo de origen elegido y posición del puntero (coordenadas del SVG)
 
   const oscurecer = c => "#" + [1, 3, 5].map(i => Math.round(parseInt(c.substr(i, 2), 16) * 0.62).toString(16).padStart(2, "0")).join("");
   const el = (tag, attrs = {}, txt) => { const e = document.createElementNS("http://www.w3.org/2000/svg", tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (txt !== undefined) e.textContent = txt; return e; };
@@ -36,22 +37,22 @@
   function iniciarManual() {
     const n = leerN(); if (n === null) return;
     detener(); modo = "manual"; g = A.crearGrafo(n); respaldo = null;
-    $("manual").style.display = "block"; $("aleat").style.display = "none";
+    $("manual").style.display = "block"; $("aleat").style.display = "none"; $("matAyuda").style.display = "block";
     const opts = Array.from({ length: n }, (_, i) => `<option>${i + 1}</option>`).join("");
     $("u").innerHTML = opts; $("v").innerHTML = opts; $("v").value = "2";
-    modificado("Agregue aristas dirigidas (u → v) y pulse «Analizar grafo».");
+    modificado("Haga clic en un nodo y luego en otro para agregar la arista u → v; al terminar pulse «Analizar grafo».");
     mostrarTrabajo(true);
   }
   function iniciarAleatorio() {
     $("err").textContent = "";
     detener(); modo = "aleatorio"; g = A.generarAleatorioLibre(); respaldo = null;
-    $("manual").style.display = "none"; $("aleat").style.display = "block";
+    $("manual").style.display = "none"; $("aleat").style.display = "block"; $("matAyuda").style.display = "none";
     modificado(""); analizar(); mostrarTrabajo(true);
   }
   function regenerar() { detener(); respaldo = null; g = A.generarAleatorioLibre(); modificado(""); analizar(); }
 
   function modificado(msg) {
-    detener(); pasos = []; comps = []; idx = 0; sug = []; verSug = false;
+    detener(); pasos = []; comps = []; idx = 0; sug = []; verSug = false; origen = null;
     const E = A.aristas(g);
     $("listaAristas").textContent = "Aristas: " + (E.length ? E.map(([u, v]) => `${u}→${v}`).join(", ") : "ninguna");
     $("infoG").textContent = `${g.n} vértices · ${E.length} aristas dirigidas`;
@@ -59,18 +60,22 @@
     $("sol").textContent = "Pulse «Analizar» o avance con «Siguiente» para ver la solución.";
     $("fase").textContent = ""; $("cont").textContent = ""; $("desc").textContent = msg;
     $("pila").textContent = "Pila DFS: —"; $("vis").textContent = "Visitados: —"; $("ord").textContent = "Orden de finalización: —"; $("comps").textContent = "Componentes: —";
-    matriz(); botones(); dibujar(); avanzado();
+    matriz(); botones(); dibujar(); avanzado(); ayuda();
   }
   function matriz() {
-    const M = A.matriz(g); let h = "<table><tr><th></th>";
+    const M = A.matriz(g), editable = modo === "manual"; let h = `<table${editable ? ' class="editable"' : ""}><tr><th></th>`;
     for (let j = 1; j <= g.n; j++) h += `<th>${j}</th>`;
     h += "</tr>";
-    M.forEach((f, i) => { h += `<tr><td class="u">${i + 1}</td>` + f.map(x => `<td${x ? ' class="uno"' : ""}>${x}</td>`).join("") + "</tr>"; });
+    // en modo manual cada celda fuera de la diagonal es clicable: 0 → crea la arista fila → columna, 1 → la borra
+    const celda = (x, i, j) => !editable ? `<td${x ? ' class="uno"' : ""}>${x}</td>`
+      : i === j ? `<td class="diag" title="Sin lazos: no hay arista ${i} → ${i}">${x}</td>`
+      : `<td class="cel${x ? " uno" : ""}" data-u="${i}" data-v="${j}" title="Clic: ${x ? "borrar" : "crear"} la arista ${i} → ${j}">${x}</td>`;
+    M.forEach((f, i) => { h += `<tr><td class="u">${i + 1}</td>` + f.map((x, j) => celda(x, i + 1, j + 1)).join("") + "</tr>"; });
     $("mat").innerHTML = h + "</table>";
   }
 
   /* ---------- ejecución ---------- */
-  function analizar() { detener(); const r = A.kosaraju(g); pasos = r.pasos; comps = r.componentes; idx = 0; sug = A.sugerirAristas(g); verSug = false; $("scrub").max = pasos.length - 1; paso(); }
+  function analizar() { detener(); origen = null; ayuda(); const r = A.kosaraju(g); pasos = r.pasos; comps = r.componentes; idx = 0; sug = A.sugerirAristas(g); verSug = false; $("scrub").max = pasos.length - 1; paso(); }
   function ir(i) { detener(); if (pasos.length && i >= 0 && i < pasos.length) { idx = i; paso(); } }
   function detener() { if (timer) { clearInterval(timer); timer = null; } $("bPlay").textContent = "▶ Reproducir"; }
   function reproducir() {
@@ -130,10 +135,12 @@
     const pt = (da, l) => [fin[0] - Math.cos(ang + da) * l, fin[1] - Math.sin(ang + da) * l];
     const a1 = pt(0.38, s), a2 = pt(-0.38, s);
     svg.appendChild(el("polygon", { points: `${fin[0]},${fin[1]} ${a1[0]},${a1[1]} ${a2[0]},${a2[1]}`, fill: color }));
+    return d;
   }
   function dibujar() {
     const svg = $("svg"); svg.innerHTML = ""; if (!g) return;
-    const P = pos(), p = pasos[idx] || null, fase = p ? p.fase : 1, grupo = {};
+    const P = pos(), p = pasos[idx] || null, fase = p ? p.fase : 1, grupo = {}, editable = modo === "manual";
+    svg.classList.toggle("editable", editable);
     if (p) p.completas.forEach((c, i) => c.forEach(v => (grupo[v] = i)));
     const cl = {}; for (let v = 1; v <= g.n; v++) cl[v] = SIN;
     if (p && fase === 1) { p.terminados.forEach(v => (cl[v] = TERM)); p.pila.forEach(v => (cl[v] = PILA)); }
@@ -143,22 +150,36 @@
     const ex = new Set(E.map(String)), arbol = new Set(p ? p.arbol.map(String) : []);
     for (const [u, v] of E) {
       const k = [u, v].toString(), curva = ex.has([v, u].toString());
+      let d;
       if (fase === 3) {
         const misma = grupo[u] === grupo[v];
-        flecha(svg, P[u], P[v], misma ? oscurecer(col(grupo[u])) : "#8795a6", misma ? 2.6 : 1.6, misma ? "" : "5 3", curva);
-      } else if (p && p.arista && p.arista.toString() === k) flecha(svg, P[u], P[v], "#e3715c", 4, "", curva);
-      else if (arbol.has(k)) flecha(svg, P[u], P[v], "#496c93", 2.6, "", curva);
-      else flecha(svg, P[u], P[v], "#b9c4d0", 1.4, "4 3", curva);
+        d = flecha(svg, P[u], P[v], misma ? oscurecer(col(grupo[u])) : "#8795a6", misma ? 2.6 : 1.6, misma ? "" : "5 3", curva);
+      } else if (p && p.arista && p.arista.toString() === k) d = flecha(svg, P[u], P[v], "#e3715c", 4, "", curva);
+      else if (arbol.has(k)) d = flecha(svg, P[u], P[v], "#496c93", 2.6, "", curva);
+      else d = flecha(svg, P[u], P[v], "#b9c4d0", 1.4, "4 3", curva);
+      if (editable) { // franja invisible y ancha sobre la flecha: un clic la borra (en Gᵀ se dibuja invertida)
+        const [a, b] = fase === 2 ? [v, u] : [u, v];
+        svg.appendChild(el("path", { d, class: "hit", "data-u": a, "data-v": b })).appendChild(el("title", {}, `Clic para borrar la arista ${a} → ${b}`));
+      }
     }
     if (p && fase === 3 && verSug) for (const [u, v] of sug) flecha(svg, P[u], P[v], "#1e9e5a", 3.4, "9 5", A.aristas(g).some(([a, b]) => a === v && b === u) || sug.some(([a, b]) => a === v && b === u));
+    if (editable && origen !== null) {
+      const mk = svg.appendChild(el("defs")).appendChild(el("marker", { id: "mkGuia", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 4.5, markerHeight: 4.5, orient: "auto" }));
+      mk.appendChild(el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#e32222" }));
+      svg.appendChild(el("line", { id: "linGuia", "marker-end": "url(#mkGuia)", visibility: "hidden" }));
+    }
     for (let v = 1; v <= g.n; v++) {
-      const [x, y] = P[v];
-      svg.appendChild(el("circle", { cx: x, cy: y, r: R, fill: cl[v], stroke: "#40556b", "stroke-width": 2 }));
-      svg.appendChild(el("text", { x, y: y + 5, "text-anchor": "middle", "font-weight": 700, "font-size": 16, fill: "#243247" }, v));
+      const [x, y] = P[v], sel = editable && v === origen;
+      const nodo = svg.appendChild(el("g", editable ? { class: "nodo", "data-v": v } : {}));
+      if (editable) nodo.appendChild(el("circle", { cx: x, cy: y, r: R + 10, fill: "transparent" })); // área de clic más grande (celulares)
+      if (sel) nodo.appendChild(el("circle", { cx: x, cy: y, r: R + 7, fill: "none", stroke: "#e32222", "stroke-width": 2, "stroke-dasharray": "4 3" }));
+      nodo.appendChild(el("circle", { class: "cuerpo", cx: x, cy: y, r: R, fill: cl[v], stroke: sel ? "#e32222" : "#40556b", "stroke-width": sel ? 4 : 2 }));
+      nodo.appendChild(el("text", { x, y: y + 5, "text-anchor": "middle", "font-weight": 700, "font-size": 16, fill: "#243247", "pointer-events": "none" }, v));
       const dx = x - W / 2, dy = y - H / 2, nn = Math.hypot(dx, dy) || 1, lx = x + dx / nn * (R + 18), ly = y + dy / nn * (R + 14) + 4;
       if (p && fase !== 3 && p.terminados.includes(v)) svg.appendChild(el("text", { x: lx, y: ly, "text-anchor": "middle", "font-weight": 700, "font-size": 13, fill: "#496c93" }, `f=${p.terminados.indexOf(v) + 1}`));
       if (p && fase === 3 && v in grupo) svg.appendChild(el("text", { x: lx, y: ly, "text-anchor": "middle", "font-weight": 700, "font-size": 14, fill: oscurecer(col(grupo[v])) }, `C${grupo[v] + 1}`));
     }
+    guia();
   }
 
   /* ---------- diferencial: grafo condensado + asistente de conectividad ---------- */
@@ -224,14 +245,73 @@
   /* ---------- aristas manuales ---------- */
   function arista(fn, ok, ya) {
     const u = +$("u").value, v = +$("v").value;
-    try { const c = fn(g, u, v); if (c) modificado(ok(u, v)); else $("desc").textContent = ya(u, v); }
-    catch (e) { $("desc").textContent = "⚠ " + e.message; }
+    try { const c = fn(g, u, v); if (c) { modificado(ok(u, v)); ayuda(ok(u, v)); } else { $("desc").textContent = ya(u, v); ayuda(ya(u, v), true); } }
+    catch (e) { $("desc").textContent = "⚠ " + e.message; ayuda("⚠ " + e.message, true); }
   }
+  const agregarSel = () => arista(A.agregar, (u, v) => `Arista ${u} → ${v} agregada.`, (u, v) => `La arista ${u} → ${v} ya existe.`);
+  const quitarSel = () => arista(A.eliminar, (u, v) => `Arista ${u} → ${v} eliminada.`, (u, v) => `La arista ${u} → ${v} no existe.`);
+
+  /* ---------- edición con clics: nodo origen → nodo destino; clic en una flecha la borra ---------- */
+  function ayuda(msg = "", mal = false) {
+    const a = $("ayuda"), on = modo === "manual";
+    a.classList.toggle("on", on); a.classList.toggle("sel", on && origen !== null);
+    if (!on) return;
+    a.innerHTML = "<div>" + (origen !== null
+      ? `Origen: <b>${origen}</b> → ahora haga clic en el nodo de destino · otro clic en ${origen} o <kbd>Esc</kbd> cancela`
+      : msg ? `<span class="msg${mal ? " mal" : ""}">${msg}</span>Clic en una flecha para borrarla.`
+      : "Clic en un nodo y luego en otro para crear la flecha · clic en una flecha para borrarla.") + "</div>";
+  }
+  function cancelar(msg = "") { origen = null; dibujar(); ayuda(msg); }
+  function clicNodo(v) {
+    if (origen === null) { origen = v; raton = null; $("u").value = v; dibujar(); ayuda(); return; }
+    if (origen === v) return cancelar("Selección cancelada.");
+    $("u").value = origen; $("v").value = v; origen = null;
+    agregarSel();
+  }
+  function guia() { // línea punteada del origen al puntero; se ajusta al borde del nodo que quedaría como destino
+    const l = $("linGuia"); if (!l) return;
+    if (!raton) return l.setAttribute("visibility", "hidden");
+    const P = pos(), [x1, y1] = P[origen];
+    let dest = null;
+    for (let v = 1; v <= g.n; v++) if (v !== origen && Math.hypot(raton[0] - P[v][0], raton[1] - P[v][1]) <= R + 10) dest = v;
+    const [tx, ty] = dest ? P[dest] : raton, L = Math.hypot(tx - x1, ty - y1) || 1, ux = (tx - x1) / L, uy = (ty - y1) / L, f = dest ? R + 4 : 0;
+    l.setAttribute("x1", x1 + ux * R); l.setAttribute("y1", y1 + uy * R);
+    l.setAttribute("x2", tx - ux * f); l.setAttribute("y2", ty - uy * f);
+    l.classList.toggle("snap", dest !== null); l.setAttribute("visibility", L > R + 6 ? "visible" : "hidden");
+  }
+  $("svg").addEventListener("click", e => {
+    if (modo !== "manual") return;
+    const n = e.target.closest(".nodo"), h = e.target.closest(".hit");
+    if (n) clicNodo(+n.dataset.v);
+    else if (h) { $("u").value = h.dataset.u; $("v").value = h.dataset.v; origen = null; quitarSel(); }
+    else if (origen !== null) cancelar();
+  });
+  $("svg").addEventListener("pointermove", e => {
+    if (origen === null) return;
+    const m = $("svg").getScreenCTM(); if (!m) return;
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); raton = [q.x, q.y]; guia();
+  });
+  $("svg").addEventListener("pointerleave", () => { raton = null; guia(); });
+
+  /* ---------- edición con clics en la matriz de adyacencia ---------- */
+  $("mat").addEventListener("click", e => {
+    const c = e.target.closest("td.cel"); if (!c || modo !== "manual") return;
+    $("u").value = c.dataset.u; $("v").value = c.dataset.v; origen = null;
+    (c.classList.contains("uno") ? quitarSel : agregarSel)();
+  });
+  function marcarCruz(c, on) { // resalta la fila (origen) y la columna (destino) de la celda bajo el puntero
+    const t = c.closest("table");
+    t.rows[0].cells[+c.dataset.v].classList.toggle("cruz", on);
+    t.rows[+c.dataset.u].cells[0].classList.toggle("cruz", on);
+  }
+  $("mat").addEventListener("mouseover", e => { const c = e.target.closest("td.cel"); if (c) marcarCruz(c, true); });
+  $("mat").addEventListener("mouseout", e => { const c = e.target.closest("td.cel"); if (c) marcarCruz(c, false); });
+
   $("bManual").onclick = iniciarManual; $("bAleat").onclick = iniciarAleatorio; $("bRegen").onclick = regenerar;
   $("bInicio").onclick = () => { detener(); mostrarTrabajo(false); };
-  $("bAdd").onclick = () => arista(A.agregar, (u, v) => `Arista ${u} → ${v} agregada.`, (u, v) => `La arista ${u} → ${v} ya existe.`);
-  $("bDel").onclick = () => arista(A.eliminar, (u, v) => `Arista ${u} → ${v} eliminada.`, (u, v) => `La arista ${u} → ${v} no existe.`);
-  $("bClr").onclick = () => { A.limpiar(g); modificado("Se eliminaron todas las aristas."); };
+  $("bAdd").onclick = agregarSel;
+  $("bDel").onclick = quitarSel;
+  $("bClr").onclick = () => { A.limpiar(g); modificado("Se eliminaron todas las aristas."); ayuda("Se eliminaron todas las aristas."); };
   $("bAna").onclick = analizar;
   $("bIni").onclick = () => ir(0); $("bPrev").onclick = () => ir(idx - 1); $("bNext").onclick = () => ir(idx + 1);
   $("bFin").onclick = () => ir(pasos.length - 1); $("bPlay").onclick = reproducir;
@@ -240,6 +320,7 @@
   $("n").addEventListener("keydown", e => { if (e.key === "Enter") iniciarManual(); });
   window.addEventListener("keydown", e => {
     if (!$("v-simulador").classList.contains("on") || $("trabajo").style.display !== "block") return;
+    if (e.key === "Escape" && origen !== null) return cancelar("Selección cancelada.");
     const t = e.target.tagName; if (t === "INPUT" || t === "SELECT" || t === "TEXTAREA") return;
     if (e.key === "ArrowRight") ir(idx + 1); else if (e.key === "ArrowLeft") ir(idx - 1);
     else if (e.key === " " && t !== "BUTTON") { e.preventDefault(); reproducir(); }

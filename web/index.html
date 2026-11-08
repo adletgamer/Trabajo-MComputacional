@@ -41,7 +41,7 @@
     <label class="t" for="n">Modo manual: cantidad de nodos (4 a 12)</label>
     <div class="nrow"><input id="n" type="number" min="4" max="12" value="8" inputmode="numeric"><input id="nr" type="range" min="4" max="12" value="8" aria-label="Cantidad de nodos"></div>
     <label class="t">¿Cómo generar el grafo?</label>
-    <button class="pri opt" id="bManual">Manual — definir n y las conexiones<small>Usted elige cada arista dirigida u → v</small></button>
+    <button class="pri opt" id="bManual">Manual — definir n y las conexiones<small>Haga clic en dos nodos para unirlos con una flecha u → v</small></button>
     <button class="sec opt" id="bAleat">Aleatorio — generar automáticamente<small>Sortea la cantidad de nodos (4 a 12) y las aristas: no hay que ingresar nada</small></button>
     <div id="err" role="alert"></div>
    </div>
@@ -56,6 +56,7 @@
   <div class="cuerpo">
     <div class="card grafo">
       <div class="ch"><b id="tituloG">Grafo G</b><span class="mut" id="infoG"></span></div>
+      <div class="ayuda" id="ayuda" aria-live="polite"></div>
       <svg id="svg" viewBox="0 0 720 560" role="img" aria-label="Grafo dirigido"></svg>
       <div class="leyenda">
         <span><i style="background:#e8eef5"></i>Sin visitar</span><span><i style="background:#f4d778"></i>En la pila DFS</span>
@@ -67,6 +68,7 @@
     <div class="card lado">
       <div id="manual">
         <h2>Construir el grafo</h2>
+        <div class="mut" style="margin-top:.2rem">Haga clic en un nodo del grafo y luego en otro, en una celda de la matriz, o elija la arista aquí:</div>
         <div class="fila" style="margin-top:.5rem">Arista <select id="u" aria-label="Origen"></select> <b>→</b> <select id="v" aria-label="Destino"></select>
           <button class="sec" id="bAdd">Agregar</button><button class="sec" id="bDel">Quitar</button><button class="sec" id="bClr">Limpiar</button></div>
         <button class="pri" id="bAna" style="width:100%;margin-top:10px">Analizar grafo ▶</button>
@@ -79,6 +81,7 @@
       <div class="mut" id="listaAristas"></div>
       <hr>
       <h2>Matriz de adyacencia <span class="mut" style="font-weight:400">(fila → columna)</span></h2>
+      <div class="mut" id="matAyuda">Clic en una celda: un 0 crea la arista fila → columna y un 1 la borra.</div>
       <div class="mat" id="mat"></div>
       <hr>
       <h2>Solución</h2>
@@ -132,7 +135,7 @@
     <ul><li>Una verificación independiente (cierre transitivo) contrasta cada resultado.</li>
      <li>La fórmula del asistente se comprobó contra fuerza bruta en los 4096 grafos dirigidos posibles de 4 nodos.</li>
      <li>20 000 grafos aleatorios adicionales: las aristas sugeridas siempre logran conexidad fuerte con el mínimo.</li></ul></div>
-   <div class="card"><h2>Atajos</h2><ul><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
+   <div class="card"><h2>Atajos</h2><ul><li>Modo manual: clic en un nodo y luego en otro crea la arista; clic en una flecha la borra; <kbd>Esc</kbd> cancela.</li><li>Modo manual: clic en una celda de la matriz crea (0 → 1) o borra (1 → 0) la arista fila → columna.</li><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
   </div>
  </div>
 </section>

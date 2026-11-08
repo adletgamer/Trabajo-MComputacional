@@ -6,6 +6,8 @@ Aplicación de escritorio en Python (Tkinter) que construye un **grafo dirigido*
 
 La carpeta `web/` contiene la misma aplicación en HTML + JavaScript (sin dependencias), publicada con Vercel desde este repositorio (`vercel.json` apunta a `web/`). Se puede abrir también localmente: `web/index.html`.
 
+En modo manual, la versión web permite construir el grafo con el mouse (o tocando la pantalla): un clic en un nodo y luego en otro crea la arista *u → v*, un clic sobre una flecha la borra y <kbd>Esc</kbd> cancela la selección. También se puede hacer clic en una celda de la matriz de adyacencia: un 0 crea la arista fila → columna y un 1 la borra. Los selectores *Origen → Destino* siguen disponibles.
+
 ## Requisitos
 
 **Python 3.10 o posterior** con **Tkinter** (incluido en la instalación habitual de Python para Windows; al instalar marque *Tcl/Tk and IDLE*). No necesita paquetes de `pip`.
