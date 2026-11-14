@@ -67,7 +67,9 @@ main{min-height:calc(100vh - 140px)}
 .grafo .ch b{font-size:1.05rem}
 svg{width:100%;height:auto;display:block}
 #svg{max-height:64vh;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#svg .nodo{cursor:grab;touch-action:none}
 #svg.editable .nodo{cursor:pointer}
+#svg .nodo:active{cursor:grabbing}
 #svg.editable .nodo:hover .cuerpo{stroke:var(--red);stroke-width:3}
 #svg .hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer}
 #svg .hit:hover{stroke:rgba(227,34,34,.22)}
