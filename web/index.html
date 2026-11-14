@@ -33,7 +33,7 @@
     <ol class="pasos3">
      <li><i>1</i><div><b>Elija el modo.</b> <span>Manual (usted fija n de 4 a 12) o aleatorio (todo se sortea).</span></div></li>
      <li><i>2</i><div><b>Recorra el algoritmo.</b> <span>Dos DFS: sobre G y sobre su transpuesto Gᵀ.</span></div></li>
-     <li><i>3</i><div><b>Interprete el resultado.</b> <span>Componentes, grafo condensado y aristas sugeridas.</span></div></li>
+     <li><i>3</i><div><b>Interprete el resultado.</b> <span>Componentes y aristas sugeridas para conectar el grafo.</span></div></li>
     </ol>
    </div>
    <div class="card inicio">
@@ -75,7 +75,7 @@
       </div>
       <div id="aleat">
         <h2>Grafo aleatorio</h2>
-        <div class="mut">La cantidad de nodos y las aristas se sortean en cada generación.</div>
+        <div class="mut">La cantidad de nodos y las aristas se sortean en cada generación. Puede ajustarlas haciendo clic en las celdas de la matriz.</div>
         <button class="sec" id="bRegen" style="margin-top:8px">↻ Generar otro grafo</button>
       </div>
       <div class="mut" id="listaAristas"></div>
@@ -107,8 +107,8 @@
   </div>
 
   <div class="card avz" id="avz">
-    <div class="tit"><span class="tag">Aporte del grupo</span><h2>Más allá de Kosaraju: grafo condensado y asistente de conectividad</h2></div>
-    <div class="mut">Disponible al terminar el algoritmo. Al contraer cada componente a un punto se obtiene un grafo sin ciclos (DAG); con él se calcula cuántas aristas faltan para que el grafo sea fuertemente conexo.</div>
+    <div class="tit"><span class="tag">Aporte del grupo</span><h2>Más allá de Kosaraju: asistente de conectividad</h2></div>
+    <div class="mut">Disponible al terminar el algoritmo. Calcula cuántas aristas faltan para que el grafo sea fuertemente conexo y propone cuáles agregar.</div>
     <div class="dos" id="avzBody"></div>
   </div>
  </div>
@@ -135,7 +135,7 @@
     <ul><li>Una verificación independiente (cierre transitivo) contrasta cada resultado.</li>
      <li>La fórmula del asistente se comprobó contra fuerza bruta en los 4096 grafos dirigidos posibles de 4 nodos.</li>
      <li>20 000 grafos aleatorios adicionales: las aristas sugeridas siempre logran conexidad fuerte con el mínimo.</li></ul></div>
-   <div class="card"><h2>Atajos</h2><ul><li>Modo manual: clic en un nodo y luego en otro crea la arista; clic en una flecha la borra; <kbd>Esc</kbd> cancela.</li><li>Modo manual: clic en una celda de la matriz crea (0 → 1) o borra (1 → 0) la arista fila → columna.</li><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
+   <div class="card"><h2>Atajos</h2><ul><li>Modo manual: clic en un nodo y luego en otro crea la arista; clic en una flecha la borra; <kbd>Esc</kbd> cancela.</li><li>Modos manual y aleatorio: clic en una celda de la matriz crea (0 → 1) o borra (1 → 0) la arista fila → columna.</li><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
   </div>
  </div>
 </section>

@@ -46,7 +46,7 @@
   function iniciarAleatorio() {
     $("err").textContent = "";
     detener(); modo = "aleatorio"; g = A.generarAleatorioLibre(); respaldo = null;
-    $("manual").style.display = "none"; $("aleat").style.display = "block"; $("matAyuda").style.display = "none";
+    $("manual").style.display = "none"; $("aleat").style.display = "block"; $("matAyuda").style.display = "block";
     modificado(""); analizar(); mostrarTrabajo(true);
   }
   function regenerar() { detener(); respaldo = null; g = A.generarAleatorioLibre(); modificado(""); analizar(); }
@@ -63,10 +63,10 @@
     matriz(); botones(); dibujar(); avanzado(); ayuda();
   }
   function matriz() {
-    const M = A.matriz(g), editable = modo === "manual"; let h = `<table${editable ? ' class="editable"' : ""}><tr><th></th>`;
+    const M = A.matriz(g), editable = true; let h = `<table${editable ? ' class="editable"' : ""}><tr><th></th>`;
     for (let j = 1; j <= g.n; j++) h += `<th>${j}</th>`;
     h += "</tr>";
-    // en modo manual cada celda fuera de la diagonal es clicable: 0 → crea la arista fila → columna, 1 → la borra
+    // en ambos modos (manual y aleatorio) cada celda fuera de la diagonal es clicable: 0 → crea la arista fila → columna, 1 → la borra
     const celda = (x, i, j) => !editable ? `<td${x ? ' class="uno"' : ""}>${x}</td>`
       : i === j ? `<td class="diag" title="Sin lazos: no hay arista ${i} → ${i}">${x}</td>`
       : `<td class="cel${x ? " uno" : ""}" data-u="${i}" data-v="${j}" title="Clic: ${x ? "borrar" : "crear"} la arista ${i} → ${j}">${x}</td>`;
@@ -182,18 +182,15 @@
     guia();
   }
 
-  /* ---------- diferencial: grafo condensado + asistente de conectividad ---------- */
+  /* ---------- diferencial: asistente de conectividad ---------- */
   function avanzado() {
     const cont = $("avzBody"), fin = pasos.length && pasos[idx].fase === 3;
-    if (!fin) { cont.innerHTML = `<div class="vacio" style="grid-column:1/-1">Termine el algoritmo (botón «Ver resultado») para ver el grafo condensado y las aristas sugeridas.</div>`; return; }
+    if (!fin) { cont.innerHTML = `<div class="vacio" style="grid-column:1/-1">Termine el algoritmo (botón «Ver resultado») para ver el asistente de conectividad y las aristas sugeridas.</div>`; return; }
     const C = A.condensacion(g, comps), m = A.cotaAumento(g, comps);
     const nom = i => `C${i + 1}`, lista = a => a.length ? a.map(nom).join(", ") : "—";
     const aislada = i => comps[i].length === 1 && !C.ent[i].size && !C.sal[i].size;
     const aislados = C.fuentes.filter(aislada).length;
-    cont.innerHTML = `<div><h2 style="margin-bottom:.5rem">Grafo condensado (cada componente = un nodo)</h2><svg id="dag" viewBox="0 0 10 10" role="img" aria-label="Grafo condensado"></svg>
-        <div class="mut" style="margin-top:.4rem">Orden topológico: <b>${C.orden.map(nom).join(" → ")}</b> · <span style="color:var(--ok);font-weight:700">● fuente</span> (sin entradas) · <span style="color:var(--warn);font-weight:700">● sumidero</span> (sin salidas)</div></div>
-      <div id="asist"></div>`;
-    dagSVG(C);
+    cont.innerHTML = `<div id="asist"></div>`;
     const a = $("asist");
     if (comps.length === 1) {
       a.innerHTML = `<h2 style="margin-bottom:.5rem">Asistente de conectividad</h2><div class="estado bien"><b>✓ El grafo ya es fuertemente conexo.</b><br>Hay una única componente: desde cualquier vértice se llega a cualquier otro. No hace falta agregar aristas.</div>
@@ -223,25 +220,6 @@
     const e = respaldo; respaldo = null; A.limpiar(g); for (const [u, v] of e) A.agregar(g, u, v);
     modificado("Se restauró el grafo original."); analizar(); ir(pasos.length - 1);
   }
-  function dagSVG(C) {
-    const svg = $("dag"), cw = 150, ch = 62, nw = 104, nh = 42, maxCapa = Math.max(...C.capa), filas = {};
-    C.capa.forEach((c, i) => (filas[c] = filas[c] || []).push(i));
-    const maxN = Math.max(...Object.values(filas).map(f => f.length)), Wd = (maxCapa + 1) * cw + 20, Hd = maxN * ch + 20, P = {};
-    svg.setAttribute("viewBox", `0 0 ${Wd} ${Hd}`);
-    for (const c in filas) filas[c].forEach((i, k) => { const off = (maxN - filas[c].length) * ch / 2; P[i] = [10 + c * cw + nw / 2 + 8, 10 + off + k * ch + ch / 2]; });
-    for (const [i, j] of C.aristas) {
-      const a = P[i], b = P[j];
-      // sale por el borde derecho de i y entra por el izquierdo de j (las capas crecen hacia la derecha)
-      flecha(svg, [a[0] + nw / 2, a[1]], [b[0] - nw / 2, b[1]], "#7b8aa0", 1.8, "", false, 0);
-    }
-    for (let i = 0; i < C.k; i++) {
-      const [x, y] = P[i], f = C.fuentes.includes(i), s = C.sumideros.includes(i);
-      svg.appendChild(el("rect", { x: x - nw / 2, y: y - nh / 2, width: nw, height: nh, rx: 10, fill: col(i), "fill-opacity": .85, stroke: f && s ? "#7a4fb5" : f ? "#2e8b57" : s ? "#d2691e" : "#52657a", "stroke-width": f || s ? 3 : 1.5 }));
-      svg.appendChild(el("text", { x, y: y - 3, "text-anchor": "middle", "font-weight": 800, "font-size": 13, fill: "#1c2535" }, `C${i + 1}`));
-      const m = A.fmt(comps[i]); svg.appendChild(el("text", { x, y: y + 12, "text-anchor": "middle", "font-size": 10.5, fill: "#1c2535" }, m.length > 15 ? m.slice(0, 13) + "…}" : m));
-    }
-  }
-
   /* ---------- aristas manuales ---------- */
   function arista(fn, ok, ya) {
     const u = +$("u").value, v = +$("v").value;
@@ -295,9 +273,12 @@
 
   /* ---------- edición con clics en la matriz de adyacencia ---------- */
   $("mat").addEventListener("click", e => {
-    const c = e.target.closest("td.cel"); if (!c || modo !== "manual") return;
-    $("u").value = c.dataset.u; $("v").value = c.dataset.v; origen = null;
-    (c.classList.contains("uno") ? quitarSel : agregarSel)();
+    const c = e.target.closest("td.cel"); if (!c || !g) return;
+    const u = +c.dataset.u, v = +c.dataset.v, existe = c.classList.contains("uno");
+    if (existe) A.eliminar(g, u, v); else A.agregar(g, u, v);
+    const msg = `Arista ${u} → ${v} ${existe ? "eliminada" : "agregada"}.`;
+    if (modo === "manual") { $("u").value = u; $("v").value = v; modificado(msg); ayuda(msg); }
+    else { modificado(msg); analizar(); $("desc").textContent = msg + " Se volvió a analizar el grafo. " + pasos[idx].descripcion; } // aleatorio: se reanaliza solo
   });
   function marcarCruz(c, on) { // resalta la fila (origen) y la columna (destino) de la celda bajo el puntero
     const t = c.closest("table");
