@@ -4,8 +4,8 @@
   const FASE_G = 1, FASE_GT = 2, FASE_RES = 3;
 
   function crearGrafo(n) {
-    if (!Number.isInteger(n) || n < N_MIN || n > N_MAX)
-      throw new Error(`La cantidad de nodos debe ser un entero entre ${N_MIN} y ${N_MAX}.`);
+    if (!Number.isInteger(n) || n < 2 || n > N_MAX)
+      throw new Error(`La cantidad de nodos debe ser un entero entre 2 y ${N_MAX}.`);
     const adj = {};
     for (let i = 1; i <= n; i++) adj[i] = new Set();
     return { n, adj };
@@ -17,6 +17,18 @@
   }
   function agregar(g, u, v) { validar(g, u, v); if (g.adj[u].has(v)) return false; g.adj[u].add(v); return true; }
   function eliminar(g, u, v) { validar(g, u, v); return g.adj[u].delete(v); }
+  /* Edición de nodos: se puede agregar uno (hasta N_MAX) o eliminar uno (queda al menos 2); al eliminar se renumeran los siguientes. */
+  function agregarNodo(g) {
+    if (g.n >= N_MAX) throw new Error(`El grafo admite como máximo ${N_MAX} vértices.`);
+    g.n++; g.adj[g.n] = new Set(); return g.n;
+  }
+  function eliminarNodo(g, v) {
+    if (!Number.isInteger(v) || v < 1 || v > g.n) throw new Error(`El vértice debe estar entre 1 y ${g.n}.`);
+    if (g.n <= 2) throw new Error("El grafo debe conservar al menos 2 vértices.");
+    const mapa = w => (w > v ? w - 1 : w), nuevo = {};
+    for (let u = 1; u <= g.n; u++) { if (u === v) continue; nuevo[mapa(u)] = new Set([...g.adj[u]].filter(w => w !== v).map(mapa)); }
+    g.adj = nuevo; g.n--;
+  }
   function limpiar(g) { for (const k in g.adj) g.adj[k].clear(); }
   function sucesores(g, u) { return [...g.adj[u]].sort((a, b) => a - b); }
   function predecesores(g, v) {
@@ -54,7 +66,7 @@
   function generarAleatorio(n, rnd = Math.random) {
     const pares = [];
     for (let u = 1; u <= n; u++) for (let v = 1; v <= n; v++) if (u !== v) pares.push([u, v]);
-    const minimo = Math.max(4, n), maximo = Math.min(pares.length, Math.max(minimo, Math.round(1.6 * n)));
+    const minimo = Math.min(pares.length, Math.max(4, n)), maximo = Math.min(pares.length, Math.max(minimo, Math.round(1.6 * n)));
     let g;
     for (let intento = 0; intento < 50; intento++) {
       g = crearGrafo(n);
@@ -193,7 +205,7 @@
   /* Construye un conjunto de aristas (de un sumidero a una fuente) que lo vuelve fuertemente conexo.
      Cada paso elige la arista que más reduce max(#fuentes, #sumideros) y se verifica recalculando. */
   function sugerirAristas(g) {
-    const h = crearGrafo(g.n); for (const [u, v] of aristas(g)) agregar(h, u, v);
+    const h = { n: g.n, adj: {} }; for (let i = 1; i <= g.n; i++) h.adj[i] = new Set(); for (const [u, v] of aristas(g)) agregar(h, u, v);
     const res = [];
     for (let guard = 0; guard < 40; guard++) {
       const comps = scc(h); if (comps.length <= 1) break;
@@ -216,7 +228,7 @@
     return res;
   }
 
-  const api = { N_MIN, N_MAX, FASE_G, FASE_GT, FASE_RES, crearGrafo, agregar, eliminar, limpiar, aristas, matriz,
+  const api = { N_MIN, N_MAX, FASE_G, FASE_GT, FASE_RES, crearGrafo, agregar, eliminar, agregarNodo, eliminarNodo, limpiar, aristas, matriz,
     sucesores, predecesores, generarAleatorio, generarAleatorioLibre, scc, condensacion, cotaAumento, sugerirAristas, kosaraju, componentesDebiles, aristasEntre, verificar, fmt };
   if (typeof module !== "undefined" && module.exports) module.exports = api; else root.Alg = api;
 })(typeof window !== "undefined" ? window : globalThis);

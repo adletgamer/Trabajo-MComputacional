@@ -6,6 +6,7 @@
   const TITULO = { 1: "Grafo G", 2: "Grafo transpuesto Gᵀ (aristas invertidas)", 3: "Grafo G con sus componentes" };
   const W = 720, H = 560, R = 24;
   let g = null, modo = "", pasos = [], comps = [], idx = 0, timer = null, sug = [], verSug = false, respaldo = null;
+  let posiciones = {}; // ubicación (x, y) de cada nodo en el SVG; se dispersa al azar y se puede arrastrar
   let origen = null, raton = null; // edición con clics: nodo de origen elegido y posición del puntero (coordenadas del SVG)
 
   const oscurecer = c => "#" + [1, 3, 5].map(i => Math.round(parseInt(c.substr(i, 2), 16) * 0.62).toString(16).padStart(2, "0")).join("");
@@ -24,6 +25,25 @@
   document.querySelectorAll("[data-vista]").forEach(b => b.addEventListener("click", e => { e.preventDefault(); history.replaceState(null, "", "#" + b.dataset.vista); vista(b.dataset.vista); }));
   window.addEventListener("hashchange", () => vista(location.hash.slice(1)));
 
+  /* ---------- ubicación de los nodos ---------- */
+  function hueco(o, d = 130) { // punto al azar alejado al menos d de los ya colocados (d se reduce si no cabe)
+    const m = R + 34;
+    for (let t = 0; ; t++) {
+      const p = [m + Math.random() * (W - 2 * m), m + Math.random() * (H - 2 * m)];
+      if (Object.values(o).every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) >= d)) return p;
+      if (t % 200 === 199) d *= 0.9;
+    }
+  }
+  function dispersar(n) { const o = {}; for (let v = 1; v <= n; v++) o[v] = hueco(o); return o; }
+  function poblar() {
+    const opts = Array.from({ length: g.n }, (_, i) => `<option>${i + 1}</option>`).join("");
+    $("u").innerHTML = opts; $("v").innerHTML = opts; $("nsel").innerHTML = opts; $("v").value = "2"; $("nsel").value = String(g.n);
+  }
+  function tras(msg) { // tras cambiar el grafo: en aleatorio se vuelve a analizar solo; en manual se espera «Analizar»
+    modificado(msg);
+    if (modo === "aleatorio") { analizar(); $("desc").textContent = msg + " " + pasos[idx].descripcion; } else ayuda(msg);
+  }
+
   /* ---------- inicio ---------- */
   function leerN() {
     const t = $("n").value.trim();
@@ -38,18 +58,17 @@
     const n = leerN(); if (n === null) return;
     detener(); modo = "manual"; g = A.crearGrafo(n); respaldo = null;
     $("manual").style.display = "block"; $("aleat").style.display = "none"; $("matAyuda").style.display = "block";
-    const opts = Array.from({ length: n }, (_, i) => `<option>${i + 1}</option>`).join("");
-    $("u").innerHTML = opts; $("v").innerHTML = opts; $("v").value = "2";
+    posiciones = dispersar(n); poblar();
     modificado("Haga clic en un nodo y luego en otro para agregar la arista u → v; al terminar pulse «Analizar grafo».");
     mostrarTrabajo(true);
   }
   function iniciarAleatorio() {
-    $("err").textContent = "";
-    detener(); modo = "aleatorio"; g = A.generarAleatorioLibre(); respaldo = null;
+    const n = leerN(); if (n === null) return;
+    detener(); modo = "aleatorio"; g = A.generarAleatorio(n); respaldo = null; posiciones = dispersar(n); poblar();
     $("manual").style.display = "none"; $("aleat").style.display = "block"; $("matAyuda").style.display = "block";
     modificado(""); analizar(); mostrarTrabajo(true);
   }
-  function regenerar() { detener(); respaldo = null; g = A.generarAleatorioLibre(); modificado(""); analizar(); }
+  function regenerar() { detener(); respaldo = null; g = A.generarAleatorio(g.n); posiciones = dispersar(g.n); poblar(); modificado(""); analizar(); }
 
   function modificado(msg) {
     detener(); pasos = []; comps = []; idx = 0; sug = []; verSug = false; origen = null;
@@ -116,11 +135,7 @@
   }
 
   /* ---------- dibujo del grafo ---------- */
-  function pos() {
-    const cx = W / 2, cy = H / 2, r = Math.min(W, H) / 2 - 62, o = {};
-    for (let v = 1; v <= g.n; v++) { const a = -Math.PI / 2 + 2 * Math.PI * (v - 1) / g.n; o[v] = [cx + r * Math.cos(a), cy + r * Math.sin(a)]; }
-    return o;
-  }
+  const pos = () => posiciones;
   function flecha(svg, p, q, color, w, dash, curva, radio = R) {
     const [x1, y1] = p, [x2, y2] = q, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
     let ini, fin, ctrl = null;
@@ -170,8 +185,8 @@
     }
     for (let v = 1; v <= g.n; v++) {
       const [x, y] = P[v], sel = editable && v === origen;
-      const nodo = svg.appendChild(el("g", editable ? { class: "nodo", "data-v": v } : {}));
-      if (editable) nodo.appendChild(el("circle", { cx: x, cy: y, r: R + 10, fill: "transparent" })); // área de clic más grande (celulares)
+      const nodo = svg.appendChild(el("g", { class: "nodo", "data-v": v }));
+      nodo.appendChild(el("circle", { cx: x, cy: y, r: R + 10, fill: "transparent" })); // área de clic más grande (celulares)
       if (sel) nodo.appendChild(el("circle", { cx: x, cy: y, r: R + 7, fill: "none", stroke: "#e32222", "stroke-width": 2, "stroke-dasharray": "4 3" }));
       nodo.appendChild(el("circle", { class: "cuerpo", cx: x, cy: y, r: R, fill: cl[v], stroke: sel ? "#e32222" : "#40556b", "stroke-width": sel ? 4 : 2 }));
       nodo.appendChild(el("text", { x, y: y + 5, "text-anchor": "middle", "font-weight": 700, "font-size": 16, fill: "#243247", "pointer-events": "none" }, v));
@@ -257,7 +272,9 @@
     l.setAttribute("x2", tx - ux * f); l.setAttribute("y2", ty - uy * f);
     l.classList.toggle("snap", dest !== null); l.setAttribute("visibility", L > R + 6 ? "visible" : "hidden");
   }
+  let arr = null, movido = false; // arrastre de nodos
   $("svg").addEventListener("click", e => {
+    if (movido) { movido = false; return; }
     if (modo !== "manual") return;
     const n = e.target.closest(".nodo"), h = e.target.closest(".hit");
     if (n) clicNodo(+n.dataset.v);
@@ -269,6 +286,20 @@
     const m = $("svg").getScreenCTM(); if (!m) return;
     const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); raton = [q.x, q.y]; guia();
   });
+  $("svg").addEventListener("pointerdown", e => {
+    movido = false; const n = e.target.closest(".nodo");
+    arr = n ? { v: +n.dataset.v, x: e.clientX, y: e.clientY, activo: false } : null;
+  });
+  $("svg").addEventListener("pointermove", e => {
+    if (!arr) return;
+    if (!arr.activo) { if (Math.hypot(e.clientX - arr.x, e.clientY - arr.y) < 5) return; arr.activo = true; try { $("svg").setPointerCapture(e.pointerId); } catch (_) {} }
+    const m = $("svg").getScreenCTM(); if (!m) return;
+    const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+    posiciones[arr.v] = [Math.min(W - R - 4, Math.max(R + 4, q.x)), Math.min(H - R - 4, Math.max(R + 4, q.y))];
+    dibujar();
+  });
+  const soltar = () => { if (arr && arr.activo) movido = true; arr = null; };
+  $("svg").addEventListener("pointerup", soltar); $("svg").addEventListener("pointercancel", soltar);
   $("svg").addEventListener("pointerleave", () => { raton = null; guia(); });
 
   /* ---------- edición con clics en la matriz de adyacencia ---------- */
@@ -276,9 +307,8 @@
     const c = e.target.closest("td.cel"); if (!c || !g) return;
     const u = +c.dataset.u, v = +c.dataset.v, existe = c.classList.contains("uno");
     if (existe) A.eliminar(g, u, v); else A.agregar(g, u, v);
-    const msg = `Arista ${u} → ${v} ${existe ? "eliminada" : "agregada"}.`;
-    if (modo === "manual") { $("u").value = u; $("v").value = v; modificado(msg); ayuda(msg); }
-    else { modificado(msg); analizar(); $("desc").textContent = msg + " Se volvió a analizar el grafo. " + pasos[idx].descripcion; } // aleatorio: se reanaliza solo
+    if (modo === "manual") { $("u").value = u; $("v").value = v; }
+    tras(`Arista ${u} → ${v} ${existe ? "eliminada" : "agregada"}.`);
   });
   function marcarCruz(c, on) { // resalta la fila (origen) y la columna (destino) de la celda bajo el puntero
     const t = c.closest("table");
@@ -294,6 +324,17 @@
   $("bDel").onclick = quitarSel;
   $("bClr").onclick = () => { A.limpiar(g); modificado("Se eliminaron todas las aristas."); ayuda("Se eliminaron todas las aristas."); };
   $("bAna").onclick = analizar;
+  $("bDelN").onclick = () => {
+    const v = +$("nsel").value;
+    try { A.eliminarNodo(g, v); } catch (e) { $("desc").textContent = "⚠ " + e.message; ayuda("⚠ " + e.message, true); return; }
+    const o = {}; for (const k in posiciones) { const w = +k; if (w < v) o[w] = posiciones[k]; else if (w > v) o[w - 1] = posiciones[k]; }
+    posiciones = o; respaldo = null; poblar(); tras(`Nodo ${v} eliminado; los siguientes se renumeraron.`);
+  };
+  $("bAddN").onclick = () => {
+    try { A.agregarNodo(g); } catch (e) { $("desc").textContent = "⚠ " + e.message; ayuda("⚠ " + e.message, true); return; }
+    posiciones[g.n] = hueco(posiciones, 90); respaldo = null; poblar(); tras(`Nodo ${g.n} agregado.`);
+  };
+  $("bDisp").onclick = () => { posiciones = dispersar(g.n); dibujar(); };
   $("bIni").onclick = () => ir(0); $("bPrev").onclick = () => ir(idx - 1); $("bNext").onclick = () => ir(idx + 1);
   $("bFin").onclick = () => ir(pasos.length - 1); $("bPlay").onclick = reproducir;
   $("scrub").oninput = () => ir(+$("scrub").value);

@@ -31,18 +31,18 @@
     <h1>Descubra las <em>componentes conexas</em> paso a paso</h1>
     <p>Construya un grafo dirigido (o déjelo al azar), vea su matriz de adyacencia y recorra el algoritmo vértice por vértice. Al final, un asistente calcula qué aristas faltan para que todo el grafo sea fuertemente conexo.</p>
     <ol class="pasos3">
-     <li><i>1</i><div><b>Elija el modo.</b> <span>Manual (usted fija n de 4 a 12) o aleatorio (todo se sortea).</span></div></li>
+     <li><i>1</i><div><b>Elija el modo.</b> <span>Indique n (de 4 a 12) y defina las aristas a mano o al azar.</span></div></li>
      <li><i>2</i><div><b>Recorra el algoritmo.</b> <span>Dos DFS: sobre G y sobre su transpuesto Gᵀ.</span></div></li>
      <li><i>3</i><div><b>Interprete el resultado.</b> <span>Componentes y aristas sugeridas para conectar el grafo.</span></div></li>
     </ol>
    </div>
    <div class="card inicio">
     <h2>Nuevo grafo</h2>
-    <label class="t" for="n">Modo manual: cantidad de nodos (4 a 12)</label>
+    <label class="t" for="n">Cantidad de nodos (4 a 12)</label>
     <div class="nrow"><input id="n" type="number" min="4" max="12" value="8" inputmode="numeric"><input id="nr" type="range" min="4" max="12" value="8" aria-label="Cantidad de nodos"></div>
     <label class="t">¿Cómo generar el grafo?</label>
-    <button class="pri opt" id="bManual">Manual — definir n y las conexiones<small>Haga clic en dos nodos para unirlos con una flecha u → v</small></button>
-    <button class="sec opt" id="bAleat">Aleatorio — generar automáticamente<small>Sortea la cantidad de nodos (4 a 12) y las aristas: no hay que ingresar nada</small></button>
+    <button class="pri opt" id="bManual">Manual — definir las conexiones<small>Con los n nodos indicados, haga clic en dos nodos para unirlos con una flecha u → v</small></button>
+    <button class="sec opt" id="bAleat">Aleatorio — generar las conexiones<small>Usa los n nodos indicados arriba y sortea las aristas entre ellos</small></button>
     <div id="err" role="alert"></div>
    </div>
   </div>
@@ -75,10 +75,13 @@
       </div>
       <div id="aleat">
         <h2>Grafo aleatorio</h2>
-        <div class="mut">La cantidad de nodos y las aristas se sortean en cada generación. Puede ajustarlas haciendo clic en las celdas de la matriz.</div>
+        <div class="mut">Se sortean las aristas entre los nodos indicados al inicio. Puede ajustarlas haciendo clic en las celdas de la matriz.</div>
         <button class="sec" id="bRegen" style="margin-top:8px">↻ Generar otro grafo</button>
       </div>
-      <div class="mut" id="listaAristas"></div>
+      <div class="fila" id="nodos" style="margin-top:10px">Nodos <select id="nsel" aria-label="Nodo"></select>
+        <button class="sec" id="bDelN">Eliminar nodo</button><button class="sec" id="bAddN">+ Agregar nodo</button><button class="sec" id="bDisp">Reordenar</button></div>
+      <div class="mut" style="margin-top:4px">Arrastre un nodo para cambiar su ubicación. Al eliminar uno, los siguientes se renumeran.</div>
+      <div class="mut" id="listaAristas" style="margin-top:6px"></div>
       <hr>
       <h2>Matriz de adyacencia <span class="mut" style="font-weight:400">(fila → columna)</span></h2>
       <div class="mut" id="matAyuda">Clic en una celda: un 0 crea la arista fila → columna y un 1 la borra.</div>
@@ -135,7 +138,7 @@
     <ul><li>Una verificación independiente (cierre transitivo) contrasta cada resultado.</li>
      <li>La fórmula del asistente se comprobó contra fuerza bruta en los 4096 grafos dirigidos posibles de 4 nodos.</li>
      <li>20 000 grafos aleatorios adicionales: las aristas sugeridas siempre logran conexidad fuerte con el mínimo.</li></ul></div>
-   <div class="card"><h2>Atajos</h2><ul><li>Modo manual: clic en un nodo y luego en otro crea la arista; clic en una flecha la borra; <kbd>Esc</kbd> cancela.</li><li>Modos manual y aleatorio: clic en una celda de la matriz crea (0 → 1) o borra (1 → 0) la arista fila → columna.</li><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
+   <div class="card"><h2>Atajos</h2><ul><li>Modo manual: clic en un nodo y luego en otro crea la arista; clic en una flecha la borra; <kbd>Esc</kbd> cancela.</li><li>Modos manual y aleatorio: arrastre un nodo para moverlo; clic en una celda de la matriz crea (0 → 1) o borra (1 → 0) la arista fila → columna.</li><li><kbd>←</kbd> <kbd>→</kbd> paso anterior / siguiente</li><li><kbd>Espacio</kbd> reproducir / pausar</li><li>La barra inferior permite saltar a cualquier paso.</li></ul></div>
   </div>
  </div>
 </section>
